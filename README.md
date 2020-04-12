@@ -4,7 +4,7 @@ A small library of curated machine learning algorithms implemented using TensorF
 ## Installation
 
 ```sh
-pip install git+https://github.com/swghosh/ml-tour.git
+$ pip install git+https://github.com/swghosh/ml-tour.git
 ```
 
 ## Usage
