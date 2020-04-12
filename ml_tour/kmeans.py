@@ -4,9 +4,9 @@ from typeguard import typechecked
 from typing import Union
 
 @tf.function
-def kmeans(X: Union[tf.Tensor, np.ndarray], 
+def train_kmeans(X: Union[tf.Tensor, np.ndarray], 
     k: int, 
-    n_iter: int = 10) -> (tf.Tensor, tf.Tensor):
+    n_iter: int = 10) -> tf.Tensor:
     """Computes the clusters and centroids for given input data `X`
     by performing k-means clustering algorithm for `n_iter` iterations
     on `k` number of clusters.
@@ -19,9 +19,8 @@ def kmeans(X: Union[tf.Tensor, np.ndarray],
             the algorithm will be run for.
 
     Returns:
-        centroids, clusters: A tuple of two tensors, one containing
-            centroids after clustering is performed and the other 
-            containing predicted cluster for each data point in `X`.
+        centroids: A tensor containing centroids
+            after clustering is performed.
     """
 
     X = tf.convert_to_tensor(X)
@@ -34,16 +33,12 @@ def kmeans(X: Union[tf.Tensor, np.ndarray],
 
     clusters = tf.zeros([m, ], dtype=tf.int64)
     centroids = init_centroids
-    prev_centroids = centroids
 
-    for _ in tf.range(n_iter + 1):
-        squared_diffs = tf.square(X[None, :, :] - centroids[:, None, :])
-        euclidean_dists = tf.reduce_sum(squared_diffs, axis=-1) ** 0.5
-        clusters = tf.argmin(euclidean_dists, axis=0)
+    for _ in tf.range(n_iter):
+        clusters = predict_kmeans(X, centroids)
 
         selector = tf.range(k, dtype=tf.int64)[:, None] == clusters[None, :]
         centroids_array = tf.TensorArray(tf.float32, size=k)
-        prev_centroids = centroids
 
         for c in tf.range(k):
             select = selector[c]
@@ -53,7 +48,38 @@ def kmeans(X: Union[tf.Tensor, np.ndarray],
         
         centroids = centroids_array.stack()
 
-    return prev_centroids, clusters
+    return centroids
+
+@tf.function
+def predict_kmeans(X: Union[tf.Tensor, np.ndarray], 
+    centroids: Union[tf.Tensor, np.ndarray]) -> tf.Tensor:
+    """Predicts the clusters for given input data `X`
+    based on smallest euclidean distance from given `centroids`.
+
+    Args:
+        X: A tensor that is automatically casted to dtype `tf.float32`
+            and necessarily be a 2D tensor of shape [m, nd].
+        centroids: A tensor containing centroid points for each
+            cluster and having shape [k, nd].
+
+    Returns:
+        clusters: A tensor with shape [m, ] containing predicted 
+            cluster for each data point in `X`.
+    """
+
+    X = tf.convert_to_tensor(X)
+    X = tf.cast(X, tf.float32)
+    assert len(tf.shape(X)) == 2, "X must be represented as 2D array only"
+
+    centroids = tf.convert_to_tensor(centroids)
+    centroids = tf.cast(centroids, tf.float32)
+    assert len(tf.shape(X)) == 2, "centroids must be represented as 2D array only"
+
+    squared_diffs = tf.square(X[None, :, :] - centroids[:, None, :])
+    euclidean_dists = tf.reduce_sum(squared_diffs, axis=-1) ** 0.5
+    clusters = tf.argmin(euclidean_dists, axis=0)
+
+    return clusters
 
 class KMeans:
     """Class used to perform k-Means clustering algorithm
@@ -94,6 +120,32 @@ class KMeans:
         self.centroids = None
     
     @typechecked
+    def fit(self, X: Union[tf.Tensor, np.ndarray]):
+        """Perform k-Means algorithm on given dataset.
+
+        Args:
+            X: A tensor that is automatically casted to dtype `tf.float32`
+                and necessarily be a 2D tensor of shape [m, nd].
+        """
+        
+        self.centroids = train_kmeans(X, self.k, self.n_iter)
+
+    @typechecked
+    def predict(self, X: Union[tf.Tensor, np.ndarray]):
+        """Predict cluster for each data point in `X`.
+
+        Args:
+            X: A tensor that is automatically casted to dtype `tf.float32`
+                and necessarily be a 2D tensor of shape [m, nd].
+        
+        Returns:
+            clusters: A tensor with shape [m, ] containing predicted cluster
+                for each data point in `X`.
+        """
+        clusters = predict_kmeans(X, self.centroids)
+        return clusters
+
+    @typechecked
     def fit_predict(self, X: Union[tf.Tensor, np.ndarray]) -> tf.Tensor:
         """Perform k-Means algorithm on given dataset and return
         a tensor with the predicted cluster for each data 
@@ -108,6 +160,5 @@ class KMeans:
             for each data point in `X`.
         """
         
-        self.centroids, clusters = kmeans(X, self.k, self.n_iter)
-        return clusters
-    
+        self.fit(X)
+        return self.predict(X)
