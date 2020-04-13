@@ -3,6 +3,8 @@ import numpy as np
 from typeguard import typechecked
 from typing import Union
 
+from . import helpers
+
 @tf.function
 def train_kmeans(X: Union[tf.Tensor, np.ndarray], 
     k: int, 
@@ -23,9 +25,9 @@ def train_kmeans(X: Union[tf.Tensor, np.ndarray],
             after clustering is performed.
     """
 
-    X = tf.convert_to_tensor(X)
-    X = tf.cast(X, tf.float32)
-    assert len(tf.shape(X)) == 2, "Training data X must be represented as 2D array only"
+    X = helpers.as_float(X)
+    helpers.check_2d(X, 'X')
+
     m = tf.shape(X)[0]
 
     random_select = tf.random.shuffle(X)
@@ -67,13 +69,11 @@ def predict_kmeans(X: Union[tf.Tensor, np.ndarray],
             cluster for each data point in `X`.
     """
 
-    X = tf.convert_to_tensor(X)
-    X = tf.cast(X, tf.float32)
-    assert len(tf.shape(X)) == 2, "X must be represented as 2D array only"
+    X = helpers.as_float(X)
+    helpers.check_2d(X, 'X')
 
-    centroids = tf.convert_to_tensor(centroids)
-    centroids = tf.cast(centroids, tf.float32)
-    assert len(tf.shape(X)) == 2, "centroids must be represented as 2D array only"
+    centroids = helpers.as_float(centroids)
+    helpers.check_2d(centroids, 'centroids')
 
     squared_diffs = tf.square(X[None, :, :] - centroids[:, None, :])
     euclidean_dists = tf.reduce_sum(squared_diffs, axis=-1) ** 0.5
