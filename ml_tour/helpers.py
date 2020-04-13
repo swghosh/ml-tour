@@ -4,6 +4,10 @@ from typeguard import typechecked
 from typing import Union
 
 @typechecked
+def check_1d(tensor: tf.Tensor, name: str):
+    assert len(tf.shape(tensor)) == 1, "%s must be represented as a 1D vector only" % name
+
+@typechecked
 def check_2d(tensor: tf.Tensor, name: str):
     assert len(tf.shape(tensor)) == 2, "%s must be represented as a 2D array only" % name
 
