@@ -20,7 +20,7 @@ def as_float(tensor: Union[tf.Tensor, np.ndarray]) -> tf.Tensor:
 @tf.function
 def get_mean_stdev(X: tf.Tensor) -> (tf.Tensor, tf.Tensor):
     mean = tf.reduce_mean(X, axis=0)
-    stdev = tf.reduce_std(X, axis=0)
+    stdev = tf.math.reduce_std(X, axis=0)
     return mean, stdev
 
 @tf.function
