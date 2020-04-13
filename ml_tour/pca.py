@@ -43,3 +43,24 @@ def transform_pca(X: Union[tf.Tensor, np.ndarray],
     X_transformed = X_normalised @ tf.transpose(Uk)
     return X_transformed
 
+class PCA:
+    @typechecked
+    def __init__(self, k: int):
+        self.k = k
+        self.mean = None
+        self.stdev = None
+        self.Uk = None
+    
+    @typechecked
+    def fit(self, X: Union[tf.Tensor, np.ndarray]):
+        self.Uk, self.mean, self.stdev = train_pca(X, self.k)
+
+    @typechecked
+    def transform(self, X: Union[tf.Tensor, np.ndarray]):
+        X_transformed = transform_pca(X, self.mean, self.stdev, self.Uk)
+        return X_transformed
+
+    @typechecked
+    def fit_transform(self, X: Union[tf.Tensor, np.ndarray]) -> tf.Tensor:
+        self.fit(X)
+        return self.transform(X)
