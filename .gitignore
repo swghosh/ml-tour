@@ -3,3 +3,4 @@ build/
 dist/
 *.egg-info/
 tests/*.ipynb
+.ipynb_checkpoints/
