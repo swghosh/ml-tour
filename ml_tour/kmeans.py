@@ -105,14 +105,13 @@ class KMeans:
 
     @typechecked
     def __init__(self, k: int, n_iter: int = 10):
-        """
-        Constructs an object of the KMeans class. It can be used
+        """Constructs an object of the KMeans class. It can be used
         to perform k-Means clustering using the `fit_predict` method.
 
         Args:
             k: An integer indicating the number of clusters.
             n_iter: An integer depicting the number of iterations that 
-            the algorithm will be run for.
+                the algorithm will be run for.
         """
 
         self.k = k
@@ -157,7 +156,7 @@ class KMeans:
         
         Returns:
             clusters: A tensor with shape [m, ] containing predicted cluster
-            for each data point in `X`.
+                for each data point in `X`.
         """
         
         self.fit(X)
